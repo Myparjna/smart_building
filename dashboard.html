@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宝龙大厦销控情况 - 智慧大厦管理后台</title>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide-static@latest/dist/lucide.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Lucide Icon Base Style */
+        i[data-lucide] {
+            display: inline-block;
+            width: 1.1em;
+            height: 1.1em;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            vertical-align: middle;
+        }
+        /* Custom scrollbar */
+        .main-content-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .main-content-area::-webkit-scrollbar-track { background-color: transparent; border-radius: 3px; }
+        .main-content-area::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; transition: background-color 0.3s ease; }
+        .main-content-area::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
+
+        /* Tab selection */
+        .tab-selected { border-color: #2563eb; color: #2563eb; background-color: #eff6ff; } /* blue-600, blue-50 */
+        .tab-selected i[data-lucide] { color: #2563eb; } /* blue-600 */
+
+        /* Room status colors */
+        .room-rented { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;} /* green-100 bg, green-600 text, green-200 border */
+        .room-reserved { background-color: #ffedd5; color: #f97316; border: 1px solid #fed7aa;} /* orange-100 bg, orange-600 text, orange-200 border */
+        /* background: blue-100 (#DBEAFE), text: blue-700 (#1D4ED8), border: blue-200 (#BFDBFE) */
+        .room-available { background-color: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE;}
+
+        /* Transitions */
+        .transition-all { transition: all 0.2s ease-in-out; }
+
+        /* Removed ineffective @apply rules for stats card selection here */
+
+    </style>
+     <script>
+      // Simple Tab functionality for Floor Plan
+      function setupFloorTabs() {
+        const tabContainers = document.querySelectorAll('[data-tab-container]');
+        tabContainers.forEach(container => {
+          const tabs = container.querySelectorAll('[data-tab]');
+          const panels = container.querySelectorAll('[data-tab-panel]');
+          const initialActiveTab = container.querySelector('[data-tab].tab-selected');
+          let activeIndex = 0;
+
+          if (initialActiveTab) {
+              activeIndex = Array.from(tabs).indexOf(initialActiveTab);
+          }
+
+          const activateTab = (index) => {
+              tabs.forEach((t, i) => {
+                  t.classList.remove('tab-selected');
+                  t.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+                  if (panels[i]) panels[i].classList.add('hidden');
+              });
+              tabs[index].classList.add('tab-selected');
+              tabs[index].classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+              if (panels[index]) panels[index].classList.remove('hidden');
+          };
+
+          activateTab(activeIndex);
+
+          tabs.forEach((tab, index) => {
+            tab.addEventListener('click', (e) => {
+              e.preventDefault();
+              activateTab(index);
+            });
+          });
+        });
+      }
+
+      // --- CORRECTED Stats Card Selection Functionality ---
+      // Stats Card Selection Functionality with Toggle Behavior and Themed Rings
+      function setupStatsCardSelection() {
+          const statsCards = document.querySelectorAll('[data-stats-card]');
+          // Define the base Tailwind classes for the ring structure
+          const baseRingClasses = ['ring-2', 'ring-offset-2'];
+          // Map status to the specific Tailwind ring *color* class
+          const themeColorClasses = {
+              rented: 'ring-green-500',
+              reserved: 'ring-orange-500',
+              available: 'ring-blue-600' // Use blue-600 for better contrast matching the card text/icon
+          };
+          // Get all possible theme color classes for easy removal
+          const allColorClasses = Object.values(themeColorClasses);
+
+          statsCards.forEach(card => {
+              card.addEventListener('click', (event) => {
+                  const clickedCard = event.currentTarget;
+                  const currentStatus = clickedCard.dataset.status;
+                  const currentColorClass = themeColorClasses[currentStatus]; // e.g., 'ring-green-500'
+
+                  // Check if the clicked card is *already* selected (has a ring)
+                  // We can reliably check for one of the base classes like 'ring-2'
+                  const isCurrentlySelected = clickedCard.classList.contains('ring-2');
+
+                  // --- First, ALWAYS clear selection state (ring classes) from ALL cards ---
+                  // This simplifies toggling and switching selection.
+                  statsCards.forEach(c => {
+                      // Remove base structure classes and all possible color classes
+                      c.classList.remove(...baseRingClasses, ...allColorClasses);
+                  });
+
+                  // --- Then, decide whether to re-apply selection to the clicked card ---
+                  if (!isCurrentlySelected) {
+                      // If it wasn't selected before the click, add the ring classes now.
+                      if (currentColorClass) { // Ensure we have a valid color class for the status
+                           clickedCard.classList.add(...baseRingClasses, currentColorClass);
+                           console.log("Selected:", currentStatus);
+                      }
+                  } else {
+                      // If it *was* selected, clicking it again means deselect.
+                      // Since we already cleared all cards above, we do nothing more here.
+                      console.log("Deselected:", currentStatus);
+                  }
+
+                  // Optional: Implement filtering logic here based on whether any card is selected
+                  // const anyCardSelected = document.querySelector('[data-stats-card].ring-2') !== null;
+                  // console.log("Is any card selected?", anyCardSelected);
+                  // filterFloorPlan(anyCardSelected ? currentStatus : null); // Example filter call
+              });
+          });
+      }
+      // --- END CORRECTED Stats Card Selection Functionality ---
+
+
+      document.addEventListener('DOMContentLoaded', () => {
+          setupFloorTabs();
+          setupStatsCardSelection(); // Call the updated function
+          lucide.createIcons(); // Initialize icons after DOM is ready
+      });
+    </script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-slate-100 p-4 md:p-6">
+
+    <div class="mockup-container bg-white rounded-xl shadow-2xl shadow-slate-300/30 overflow-hidden border border-slate-200/80">
+
+        <div class="flex flex-col md:flex-row min-h-[calc(100vh-3rem)] md:min-h-[calc(100vh-3rem)]">
+
+            <aside class="w-full md:w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-200 p-5 flex flex-col shrink-0">
+                <div class="flex items-center mb-8">
+                     <i data-lucide="building-2" class="w-8 h-8 mr-3 text-blue-400"></i>
+                     <h1 class="text-xl font-semibold text-white whitespace-nowrap">智慧大厦后台</h1>
+                </div>
+
+                <nav class="flex-grow space-y-2">
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-sm">
+                        <i data-lucide="layout-dashboard" class="mr-3 opacity-90"></i>
+                        <span>仪表盘</span>
+                    </a>
+                     <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="home" class="mr-3 opacity-70"></i><span>房间管理</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="users" class="mr-3 opacity-70"></i><span>租户信息</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="file-text" class="mr-3 opacity-70"></i><span>合同管理</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="receipt" class="mr-3 opacity-70"></i><span>开票管理</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="alert-octagon" class="mr-3 opacity-70"></i><span>告警中心</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="wrench" class="mr-3 opacity-70"></i><span>服务工单</span></a>
+                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="settings" class="mr-3 opacity-70"></i><span>系统设置</span></a>
+                </nav>
+
+                <div class="mt-auto pt-6 text-center text-xs text-slate-500/80">
+                    <p>由 Gemini Pro 生成</p>
+                    <p>日期: 2025年4月23日</p>
+                </div>
+            </aside>
+
+            <main class="flex-1 bg-gray-50 p-6 md:p-8 lg:p-10 overflow-y-auto main-content-area">
+
+                <header class="mb-8">
+                    <h2 class="text-3xl font-bold text-slate-800">宝龙大厦销控情况</h2>
+                    <p class="text-sm text-slate-500 mt-1">实时概览大厦房间状态</p>
+                </header>
+
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div data-stats-card data-status="rented" class="bg-gradient-to-br from-white to-green-50 p-6 rounded-xl shadow-lg shadow-green-500/10 border border-green-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-green-700 mb-1">已出租 (间)</p>
+                                <p class="text-4xl font-bold text-green-600">352</p>
+                            </div>
+                            <div class="bg-green-100 p-3 rounded-full">
+                                <i data-lucide="check-circle-2" class="text-green-600 w-7 h-7"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-stats-card data-status="reserved" class="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl shadow-lg shadow-orange-500/10 border border-orange-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-orange-700 mb-1">预定 (间)</p>
+                                <p class="text-4xl font-bold text-orange-600">12</p>
+                            </div>
+                            <div class="bg-orange-100 p-3 rounded-full">
+                                <i data-lucide="clock-3" class="text-orange-600 w-7 h-7"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-stats-card data-status="available" class="bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-lg shadow-blue-500/10 border border-blue-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-700 mb-1">待出租 (间)</p>
+                                <p class="text-4xl font-bold text-blue-600">121</p>
+                            </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <i data-lucide="layout-list" class="text-blue-600 w-7 h-7"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="bg-white p-6 rounded-xl shadow-lg shadow-slate-500/10 border border-slate-200/60" data-tab-container>
+                    <div class="flex justify-between items-center mb-5">
+                       <h3 class="text-xl font-semibold text-slate-700">楼层房间状态图</h3>
+                       <div class="border-b border-gray-200">
+                           <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                               <button data-tab class="tab-selected whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
+                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 8层
+                               </button>
+                               <button data-tab class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
+                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 9层
+                               </button>
+                                <button data-tab class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
+                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 10层
+                               </button>
+                           </nav>
+                       </div>
+                    </div>
+
+                    <div data-tab-panel class="mt-6">
+                        <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">801</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">802</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">803</div>
+                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">804</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">805</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">806</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">807</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">808</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">809</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">810</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">811</div>
+                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">812</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">813</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">814</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">815</div>
+                        </div>
+                    </div>
+                    <div data-tab-panel class="hidden mt-6">
+                         <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">901</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">902</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">903</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">904</div>
+                         </div>
+                    </div>
+                    <div data-tab-panel class="hidden mt-6">
+                        <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1001</div>
+                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1002</div>
+                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1003</div>
+                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1004</div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    </body>
+</html>
