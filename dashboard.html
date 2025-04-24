@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title智慧大厦管理后台</title>
+    <title>宝龙大厦销控情况 - 智慧大厦管理后台</title>
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
 
@@ -40,15 +40,14 @@
         .tab-selected i[data-lucide] { color: #2563eb; } /* blue-600 */
 
         /* Room status colors */
-        .room-rented { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;} /* green-100 bg, green-600 text, green-200 border */
-        .room-reserved { background-color: #ffedd5; color: #f97316; border: 1px solid #fed7aa;} /* orange-100 bg, orange-600 text, orange-200 border */
-        /* background: blue-100 (#DBEAFE), text: blue-700 (#1D4ED8), border: blue-200 (#BFDBFE) */
+        .room-rented { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;}
+        .room-reserved { background-color: #ffedd5; color: #f97316; border: 1px solid #fed7aa;}
         .room-available { background-color: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE;}
 
         /* Transitions */
         .transition-all { transition: all 0.2s ease-in-out; }
 
-        /* Removed ineffective @apply rules for stats card selection here */
+        /* Custom classes using @apply are REMOVED */
 
     </style>
      <script>
@@ -87,64 +86,56 @@
         });
       }
 
-      // --- CORRECTED Stats Card Selection Functionality ---
-      // Stats Card Selection Functionality with Toggle Behavior and Themed Rings
+      // Stats Card Selection Functionality with Toggle Behavior and Direct Tailwind Classes
       function setupStatsCardSelection() {
           const statsCards = document.querySelectorAll('[data-stats-card]');
-          // Define the base Tailwind classes for the ring structure
+          // Define the actual Tailwind utility classes needed for the selection ring
           const baseRingClasses = ['ring-2', 'ring-offset-2'];
-          // Map status to the specific Tailwind ring *color* class
-          const themeColorClasses = {
+          const themeRingClasses = { // Maps status to its specific theme ring color class
               rented: 'ring-green-500',
               reserved: 'ring-orange-500',
-              available: 'ring-blue-600' // Use blue-600 for better contrast matching the card text/icon
+              available: 'ring-blue-500' // Using blue-500 (#3B82F6) for the ring
           };
-          // Get all possible theme color classes for easy removal
-          const allColorClasses = Object.values(themeColorClasses);
+          const allThemeRingColorClasses = Object.values(themeRingClasses); // Array of all possible theme color classes
 
           statsCards.forEach(card => {
               card.addEventListener('click', (event) => {
                   const clickedCard = event.currentTarget;
                   const currentStatus = clickedCard.dataset.status;
-                  const currentColorClass = themeColorClasses[currentStatus]; // e.g., 'ring-green-500'
+                  const currentThemeRingClass = themeRingClasses[currentStatus];
+                   // Check if the card is selected by looking for one of the base ring classes
+                  const isCurrentlySelected = clickedCard.classList.contains(baseRingClasses[0]); // Check for 'ring-2'
 
-                  // Check if the clicked card is *already* selected (has a ring)
-                  // We can reliably check for one of the base classes like 'ring-2'
-                  const isCurrentlySelected = clickedCard.classList.contains('ring-2');
-
-                  // --- First, ALWAYS clear selection state (ring classes) from ALL cards ---
-                  // This simplifies toggling and switching selection.
-                  statsCards.forEach(c => {
-                      // Remove base structure classes and all possible color classes
-                      c.classList.remove(...baseRingClasses, ...allColorClasses);
-                  });
-
-                  // --- Then, decide whether to re-apply selection to the clicked card ---
-                  if (!isCurrentlySelected) {
-                      // If it wasn't selected before the click, add the ring classes now.
-                      if (currentColorClass) { // Ensure we have a valid color class for the status
-                           clickedCard.classList.add(...baseRingClasses, currentColorClass);
-                           console.log("Selected:", currentStatus);
-                      }
-                  } else {
-                      // If it *was* selected, clicking it again means deselect.
-                      // Since we already cleared all cards above, we do nothing more here.
-                      console.log("Deselected:", currentStatus);
+                  // Determine classes to remove/add
+                  const classesToRemove = [...baseRingClasses, ...allThemeRingColorClasses];
+                  const classesToAdd = [...baseRingClasses];
+                  if(currentThemeRingClass) {
+                      classesToAdd.push(currentThemeRingClass);
                   }
 
-                  // Optional: Implement filtering logic here based on whether any card is selected
-                  // const anyCardSelected = document.querySelector('[data-stats-card].ring-2') !== null;
-                  // console.log("Is any card selected?", anyCardSelected);
-                  // filterFloorPlan(anyCardSelected ? currentStatus : null); // Example filter call
+
+                  if (isCurrentlySelected) {
+                      // --- Logic for Deselecting ---
+                      clickedCard.classList.remove(...classesToRemove); // Remove base ring and all possible theme colors
+                      console.log("Deselected:", currentStatus);
+                  } else {
+                      // --- Logic for Selecting ---
+                      // 1. Deselect all other cards first
+                      statsCards.forEach(c => {
+                          c.classList.remove(...classesToRemove); // Remove base ring and all possible theme colors from all cards
+                      });
+                      // 2. Select the clicked card
+                      clickedCard.classList.add(...classesToAdd); // Add base ring and the correct theme color
+                      console.log("Selected:", currentStatus);
+                  }
               });
           });
       }
-      // --- END CORRECTED Stats Card Selection Functionality ---
 
 
       document.addEventListener('DOMContentLoaded', () => {
           setupFloorTabs();
-          setupStatsCardSelection(); // Call the updated function
+          setupStatsCardSelection();
           lucide.createIcons(); // Initialize icons after DOM is ready
       });
     </script>
@@ -184,12 +175,12 @@
             <main class="flex-1 bg-gray-50 p-6 md:p-8 lg:p-10 overflow-y-auto main-content-area">
 
                 <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-slate-800">XX大厦销控情况</h2>
+                    <h2 class="text-3xl font-bold text-slate-800">宝龙大厦销控情况</h2>
                     <p class="text-sm text-slate-500 mt-1">实时概览大厦房间状态</p>
                 </header>
 
                 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div data-stats-card data-status="rented" class="bg-gradient-to-br from-white to-green-50 p-6 rounded-xl shadow-lg shadow-green-500/10 border border-green-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <div data-stats-card data-status="rented" class="bg-gradient-to-br from-white to-green-50 p-6 rounded-xl shadow-lg shadow-green-500/10 border border-green-200/50 hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-green-700 mb-1">已出租 (间)</p>
@@ -200,7 +191,7 @@
                             </div>
                         </div>
                     </div>
-                    <div data-stats-card data-status="reserved" class="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl shadow-lg shadow-orange-500/10 border border-orange-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <div data-stats-card data-status="reserved" class="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl shadow-lg shadow-orange-500/10 border border-orange-200/50 hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-orange-700 mb-1">预定 (间)</p>
@@ -211,7 +202,7 @@
                             </div>
                         </div>
                     </div>
-                    <div data-stats-card data-status="available" class="bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-lg shadow-blue-500/10 border border-blue-200/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+                    <div data-stats-card data-status="available" class="bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-lg shadow-blue-500/10 border border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-sm font-medium text-blue-700 mb-1">待出租 (间)</p>
