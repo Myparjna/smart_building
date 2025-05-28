@@ -69,18 +69,18 @@
         .modal-filter-tab-group button:not(.active):hover { color: #1890FF; border-color: #c6e2ff; }
 
         .modal-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 14px; }
-        .modal-table th, .modal-table td { border: 1px solid #e2e8f0; padding: 10px 8px; /* Reduced padding slightly */ text-align: center; }
+        .modal-table th, .modal-table td { border: 1px solid #e2e8f0; padding: 10px 8px; text-align: center; }
         .modal-table th { background-color: #f8fafd; color: #606266; font-weight: 500; }
-        .modal-table tbody tr:nth-child(even) { background-color: #fafcff; }
+        /* Removed: .modal-table tbody tr:nth-child(even) { background-color: #fafcff; } */
         .modal-table tbody tr:hover { background-color: #f0f6ff; }
         
         .modal-table .col-sequence { width: 6%; white-space: nowrap; }
-        .modal-table .col-customer { width: 20%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } /* Will show ellipsis if too long for nowrap */
+        .modal-table .col-customer { width: 20%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .modal-table .col-contact { width: 12%; white-space: nowrap; }
         .modal-table .col-method { width: 10%; white-space: nowrap; }
         .modal-table .col-image { width: 8%; white-space: nowrap; } 
         .modal-table .col-remarks { 
-            width: 44%; /* Remaining width for remarks */
+            width: 44%; 
             white-space: pre-wrap; 
             word-break: break-word; 
             text-align: left; 
