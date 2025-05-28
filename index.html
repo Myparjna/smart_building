@@ -3,276 +3,491 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>某某大厦销控情况 - 智慧大厦管理后台</title>
-
-    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <script src="https://unpkg.com/lucide-static@latest/dist/lucide.js"></script>
-
+    <title>客户拜访统计 - 企业级智能CRM系统</title>
+    <script src="https://cdn.tailwindcss.com/3.4.3"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <style>
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Noto Sans SC', 'HarmonyOS Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: #f0f2f5;
         }
-        /* Lucide Icon Base Style */
-        i[data-lucide] {
-            display: inline-block;
-            width: 1.1em;
-            height: 1.1em;
-            stroke-width: 2;
-            stroke: currentColor;
-            fill: none;
-            vertical-align: middle;
+        .sidebar-dark { background-color: #1f2937; }
+        .sidebar-text { color: #d1d5db; }
+        .sidebar-text-active { color: #ffffff; }
+        .sidebar-icon { color: #9ca3af; }
+        .sidebar-icon-active { color: #3b82f6; }
+        .content-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 20px 20px -10px rgba(0, 0, 0, 0.04);
         }
-        /* Custom scrollbar */
-        .main-content-area::-webkit-scrollbar { width: 6px; height: 6px; }
-        .main-content-area::-webkit-scrollbar-track { background-color: transparent; border-radius: 3px; }
-        .main-content-area::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 3px; transition: background-color 0.3s ease; }
-        .main-content-area::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
-
-        /* Tab selection */
-        .tab-selected { border-color: #2563eb; color: #2563eb; background-color: #eff6ff; } /* blue-600, blue-50 */
-        .tab-selected i[data-lucide] { color: #2563eb; } /* blue-600 */
-
-        /* Room status colors */
-        .room-rented { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;}
-        .room-reserved { background-color: #ffedd5; color: #f97316; border: 1px solid #fed7aa;}
-        .room-available { background-color: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE;}
-
-        /* Transitions */
-        .transition-all { transition: all 0.2s ease-in-out; }
-
-        /* Custom classes using @apply are REMOVED */
-
+        .custom-tab-active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+            font-weight: 600;
+            background-color: #eff6ff; /* Light blue background for active tab */
+        }
+        .custom-tab-inactive {
+            border-bottom-color: transparent;
+            color: #6b7280;
+        }
+        .custom-tab-inactive:hover {
+            color: #3b82f6;
+            background-color: #f9fafb; /* Light gray hover for inactive tabs */
+        }
+        /* Sidebar transition */
+        .sidebar {
+            transition: width 0.3s ease-in-out;
+        }
+        .subtle-gradient-border {
+            position: relative;
+        }
+        .subtle-gradient-border::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #4f46e5, #3b82f6, #22d3ee);
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+         /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1a1; }
     </style>
-     <script>
-      // Simple Tab functionality for Floor Plan
-      function setupFloorTabs() {
-        const tabContainers = document.querySelectorAll('[data-tab-container]');
-        tabContainers.forEach(container => {
-          const tabs = container.querySelectorAll('[data-tab]');
-          const panels = container.querySelectorAll('[data-tab-panel]');
-          const initialActiveTab = container.querySelector('[data-tab].tab-selected');
-          let activeIndex = 0;
-
-          if (initialActiveTab) {
-              activeIndex = Array.from(tabs).indexOf(initialActiveTab);
-          }
-
-          const activateTab = (index) => {
-              tabs.forEach((t, i) => {
-                  t.classList.remove('tab-selected');
-                  t.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                  if (panels[i]) panels[i].classList.add('hidden');
-              });
-              tabs[index].classList.add('tab-selected');
-              tabs[index].classList.remove('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-              if (panels[index]) panels[index].classList.remove('hidden');
-          };
-
-          activateTab(activeIndex);
-
-          tabs.forEach((tab, index) => {
-            tab.addEventListener('click', (e) => {
-              e.preventDefault();
-              activateTab(index);
-            });
-          });
-        });
-      }
-
-      // Stats Card Selection Functionality with Toggle Behavior and Direct Tailwind Classes
-      function setupStatsCardSelection() {
-          const statsCards = document.querySelectorAll('[data-stats-card]');
-          // Define the actual Tailwind utility classes needed for the selection ring
-          const baseRingClasses = ['ring-2', 'ring-offset-2'];
-          const themeRingClasses = { // Maps status to its specific theme ring color class
-              rented: 'ring-green-500',
-              reserved: 'ring-orange-500',
-              available: 'ring-blue-500' // Using blue-500 (#3B82F6) for the ring
-          };
-          const allThemeRingColorClasses = Object.values(themeRingClasses); // Array of all possible theme color classes
-
-          statsCards.forEach(card => {
-              card.addEventListener('click', (event) => {
-                  const clickedCard = event.currentTarget;
-                  const currentStatus = clickedCard.dataset.status;
-                  const currentThemeRingClass = themeRingClasses[currentStatus];
-                   // Check if the card is selected by looking for one of the base ring classes
-                  const isCurrentlySelected = clickedCard.classList.contains(baseRingClasses[0]); // Check for 'ring-2'
-
-                  // Determine classes to remove/add
-                  const classesToRemove = [...baseRingClasses, ...allThemeRingColorClasses];
-                  const classesToAdd = [...baseRingClasses];
-                  if(currentThemeRingClass) {
-                      classesToAdd.push(currentThemeRingClass);
-                  }
-
-
-                  if (isCurrentlySelected) {
-                      // --- Logic for Deselecting ---
-                      clickedCard.classList.remove(...classesToRemove); // Remove base ring and all possible theme colors
-                      console.log("Deselected:", currentStatus);
-                  } else {
-                      // --- Logic for Selecting ---
-                      // 1. Deselect all other cards first
-                      statsCards.forEach(c => {
-                          c.classList.remove(...classesToRemove); // Remove base ring and all possible theme colors from all cards
-                      });
-                      // 2. Select the clicked card
-                      clickedCard.classList.add(...classesToAdd); // Add base ring and the correct theme color
-                      console.log("Selected:", currentStatus);
-                  }
-              });
-          });
-      }
-
-
-      document.addEventListener('DOMContentLoaded', () => {
-          setupFloorTabs();
-          setupStatsCardSelection();
-          lucide.createIcons(); // Initialize icons after DOM is ready
-      });
-    </script>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-slate-100 p-4 md:p-6">
+<body class="flex h-screen overflow-hidden">
 
-    <div class="mockup-container bg-white rounded-xl shadow-2xl shadow-slate-300/30 overflow-hidden border border-slate-200/80">
-
-        <div class="flex flex-col md:flex-row min-h-[calc(100vh-3rem)] md:min-h-[calc(100vh-3rem)]">
-
-            <aside class="w-full md:w-64 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-200 p-5 flex flex-col shrink-0">
-                <div class="flex items-center mb-8">
-                     <i data-lucide="building-2" class="w-8 h-8 mr-3 text-blue-400"></i>
-                     <h1 class="text-xl font-semibold text-white whitespace-nowrap">智慧大厦后台</h1>
+    <!-- Sidebar (Same as previous, for context) -->
+    <aside id="sidebar" class="sidebar sidebar-dark w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform md:relative md:translate-x-0 transition-all duration-300 ease-in-out z-30 flex flex-col justify-between">
+        <div>
+            <div class="px-4 mb-8 flex items-center justify-between">
+                <a href="#" class="text-white text-2xl font-semibold harmony-sans flex items-center">
+                    <i class="ti ti-hexagon-letter-c text-3xl mr-2 text-blue-400"></i> <span class="sidebar-nav-text">CRM Pro</span>
+                </a>
+                <button id="sidebarToggleDesktop" class="hidden md:block text-gray-400 hover:text-white focus:outline-none">
+                    <i class="ti ti-chevrons-left text-2xl"></i>
+                </button>
+            </div>
+            <nav>
+                <a href="#" class="flex items-center py-2.5 px-4 rounded-lg transition duration-200 hover:bg-gray-700 sidebar-text">
+                    <i class="ti ti-home sidebar-icon mr-3 text-lg"></i> <span class="sidebar-nav-text">首页</span>
+                </a>
+                 <div>
+                    <button class="w-full flex items-center justify-between py-2.5 px-4 rounded-lg transition duration-200 hover:bg-gray-700 sidebar-text" onclick="toggleSubmenu('crmMenu')">
+                        <div class="flex items-center"> <i class="ti ti-users-group sidebar-icon mr-3 text-lg"></i> <span class="sidebar-nav-text">客户关系</span></div>
+                        <i id="crmMenuIcon" class="ti ti-chevron-down sidebar-icon transition-transform duration-300"></i>
+                    </button>
+                    <div id="crmMenu" class="ml-4 mt-1 space-y-1 hidden sidebar-nav-text">
+                        <a href="#" class="block py-2 px-4 rounded-lg transition duration-200 hover:bg-gray-700 hover:text-white text-sm sidebar-text">客户列表</a>
+                        <a href="#" class="block py-2 px-4 rounded-lg transition duration-200 hover:bg-gray-700 hover:text-white text-sm sidebar-text">拜访记录</a>
+                    </div>
                 </div>
-
-                <nav class="flex-grow space-y-2">
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-sm">
-                        <i data-lucide="layout-dashboard" class="mr-3 opacity-90"></i>
-                        <span>仪表盘</span>
-                    </a>
-                     <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="home" class="mr-3 opacity-70"></i><span>房间管理</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="users" class="mr-3 opacity-70"></i><span>租户信息</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="file-text" class="mr-3 opacity-70"></i><span>合同管理</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="receipt" class="mr-3 opacity-70"></i><span>开票管理</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="alert-octagon" class="mr-3 opacity-70"></i><span>告警中心</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="wrench" class="mr-3 opacity-70"></i><span>服务工单</span></a>
-                    <a href="#" class="flex items-center px-3 py-2.5 rounded-lg hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors duration-150"><i data-lucide="settings" class="mr-3 opacity-70"></i><span>系统设置</span></a>
-                </nav>
-
-                <div class="mt-auto pt-6 text-center text-xs text-slate-500/80">
-                    <p>由 Gemini Pro 生成</p>
-                    <p>日期: 2025年4月23日</p>
+                <div> <!-- Active Menu Item -->
+                    <button class="w-full flex items-center justify-between py-2.5 px-4 rounded-lg bg-blue-600/30 transition duration-200 sidebar-text-active" onclick="toggleSubmenu('analyticsMenu')">
+                         <div class="flex items-center"><i class="ti ti-chart-bar sidebar-icon-active mr-3 text-lg"></i> <span class="sidebar-nav-text">数据分析</span></div>
+                        <i id="analyticsMenuIcon" class="ti ti-chevron-up sidebar-icon-active transition-transform duration-300"></i>
+                    </button>
+                    <div id="analyticsMenu" class="ml-4 mt-1 space-y-1 sidebar-nav-text"> <!-- Open by default -->
+                        <a href="#" class="block py-2 px-4 rounded-lg bg-blue-500 text-white text-sm font-medium">客户拜访统计</a>
+                        <a href="#" class="block py-2 px-4 rounded-lg transition duration-200 hover:bg-gray-700 hover:text-white text-sm sidebar-text">销售漏斗分析</a>
+                    </div>
                 </div>
-            </aside>
-
-            <main class="flex-1 bg-gray-50 p-6 md:p-8 lg:p-10 overflow-y-auto main-content-area">
-
-                <header class="mb-8">
-                    <h2 class="text-3xl font-bold text-slate-800">大厦销控情况</h2>
-                    <p class="text-sm text-slate-500 mt-1">实时概览大厦房间状态</p>
-                </header>
-
-                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div data-stats-card data-status="rented" class="bg-gradient-to-br from-white to-green-50 p-6 rounded-xl shadow-lg shadow-green-500/10 border border-green-200/50 hover:shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-green-700 mb-1">已出租 (间)</p>
-                                <p class="text-4xl font-bold text-green-600">352</p>
-                            </div>
-                            <div class="bg-green-100 p-3 rounded-full">
-                                <i data-lucide="check-circle-2" class="text-green-600 w-7 h-7"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div data-stats-card data-status="reserved" class="bg-gradient-to-br from-white to-orange-50 p-6 rounded-xl shadow-lg shadow-orange-500/10 border border-orange-200/50 hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-orange-700 mb-1">预定 (间)</p>
-                                <p class="text-4xl font-bold text-orange-600">12</p>
-                            </div>
-                            <div class="bg-orange-100 p-3 rounded-full">
-                                <i data-lucide="clock-3" class="text-orange-600 w-7 h-7"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div data-stats-card data-status="available" class="bg-gradient-to-br from-white to-blue-50 p-6 rounded-xl shadow-lg shadow-blue-500/10 border border-blue-200/50 hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-sm font-medium text-blue-700 mb-1">待出租 (间)</p>
-                                <p class="text-4xl font-bold text-blue-600">121</p>
-                            </div>
-                            <div class="bg-blue-100 p-3 rounded-full">
-                                <i data-lucide="layout-list" class="text-blue-600 w-7 h-7"></i>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="bg-white p-6 rounded-xl shadow-lg shadow-slate-500/10 border border-slate-200/60" data-tab-container>
-                    <div class="flex justify-between items-center mb-5">
-                       <h3 class="text-xl font-semibold text-slate-700">楼层房间状态图</h3>
-                       <div class="border-b border-gray-200">
-                           <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                               <button data-tab class="tab-selected whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
-                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 8层
-                               </button>
-                               <button data-tab class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
-                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 9层
-                               </button>
-                                <button data-tab class="text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-150">
-                                   <i data-lucide="layers" class="mr-1 -ml-1"></i> 10层
-                               </button>
-                           </nav>
-                       </div>
-                    </div>
-
-                    <div data-tab-panel class="mt-6">
-                        <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">801</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">802</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">803</div>
-                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">804</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">805</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">806</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">807</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">808</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">809</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">810</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">811</div>
-                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">812</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">813</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">814</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">815</div>
-                        </div>
-                    </div>
-                    <div data-tab-panel class="hidden mt-6">
-                         <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">901</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">902</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">903</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">904</div>
-                         </div>
-                    </div>
-                    <div data-tab-panel class="hidden mt-6">
-                        <div class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-3">
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1001</div>
-                            <div class="room-rented aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1002</div>
-                            <div class="room-reserved aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1003</div>
-                            <div class="room-available aspect-square rounded-lg flex items-center justify-center text-xs font-semibold p-1 text-center hover:scale-105 hover:shadow-md transition-transform">1004</div>
-                        </div>
-                    </div>
-                </section>
-
-            </main>
+                 <a href="#" class="flex items-center py-2.5 px-4 rounded-lg transition duration-200 hover:bg-gray-700 sidebar-text">
+                    <i class="ti ti-user-cog sidebar-icon mr-3 text-lg"></i> <span class="sidebar-nav-text">用户管理</span>
+                </a>
+            </nav>
         </div>
-    </div>
+        <div class="px-4 py-2 border-t border-gray-700 sidebar-nav-text">
+             <button id="sidebarToggleFooter" class="w-full flex items-center py-2.5 px-2 rounded-lg transition duration-200 hover:bg-gray-700 sidebar-text">
+                <i id="sidebarToggleFooterIcon" class="ti ti-arrow-bar-to-left sidebar-icon mr-3 text-lg"></i> <span>收起侧边栏</span>
+            </button>
+        </div>
+    </aside>
 
-    </body>
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top bar (Same as previous) -->
+        <header class="bg-white shadow-sm flex items-center justify-between p-4">
+            <div class="flex items-center">
+                <button id="sidebarToggleMobile" class="md:hidden mr-3 text-gray-600 hover:text-gray-800 focus:outline-none">
+                    <i class="ti ti-menu-2 text-2xl"></i>
+                </button>
+                <nav aria-label="breadcrumb">
+                    <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                        <li><a href="#" class="hover:text-blue-500">数据分析</a></li>
+                        <li><i class="ti ti-chevron-right text-xs"></i></li>
+                        <li class="font-medium text-gray-700" aria-current="page">客户拜访统计</li>
+                    </ol>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-5">
+                <button class="text-gray-500 hover:text-blue-500 relative">
+                    <i class="ti ti-bell text-xl"></i><span class="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </button>
+                <div class="relative">
+                    <button onclick="toggleUserDropdown()" class="flex items-center space-x-2 focus:outline-none">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=80&h=80&q=80" alt="User Avatar" class="w-8 h-8 rounded-full object-cover border-2 border-transparent hover:border-blue-400 transition-all">
+                        <span class="text-sm text-gray-700 font-medium">张三丰</span>
+                        <i id="userDropdownIcon" class="ti ti-chevron-down text-xs text-gray-500 transition-transform duration-300"></i>
+                    </button>
+                    <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-xl py-1 z-50 ring-1 ring-black ring-opacity-5">
+                        <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"><i class="ti ti-user-circle mr-2"></i>个人中心</a>
+                        <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"><i class="ti ti-logout mr-2"></i>登出系统</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab bar for open pages (Same as previous) -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="px-4 flex space-x-1">
+                <button class="py-2.5 px-4 text-sm flex items-center tab-inactive hover:bg-gray-100 rounded-t-md"><span>首页</span><i class="ti ti-x text-xs ml-2 p-0.5 hover:bg-gray-300 rounded-full"></i></button>
+                <button class="py-2.5 px-4 text-sm flex items-center tab-active border-b-2"><span>客户拜访统计</span><i class="ti ti-x text-xs ml-2 p-0.5 hover:bg-blue-100 rounded-full"></i></button>
+            </div>
+        </div>
+        
+        <!-- Main content area -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <div class="content-card p-6 subtle-gradient-border min-h-[calc(100vh-180px)]">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
+                    <div>
+                        <h1 class="text-2xl font-semibold text-slate-800 harmony-sans">客户拜访统计看板</h1>
+                        <p class="text-sm text-slate-500 mt-1">当前数据更新至：<span id="dataUpdateTime">2025-06-08 09:00:00</span></p>
+                    </div>
+                    <!-- Time Range Tabs -->
+                    <div id="timeRangeTabs" class="flex space-x-1 border border-gray-200 rounded-lg p-0.5 mt-4 sm:mt-0 bg-gray-50 shadow-sm">
+                        <button data-range="lastWeek" class="time-tab custom-tab-active px-4 py-1.5 rounded-md text-sm focus:outline-none transition-colors duration-200">上周</button>
+                        <button data-range="lastMonth" class="time-tab custom-tab-inactive px-4 py-1.5 rounded-md text-sm focus:outline-none transition-colors duration-200">上月</button>
+                        <button data-range="lastQuarter" class="time-tab custom-tab-inactive px-4 py-1.5 rounded-md text-sm focus:outline-none transition-colors duration-200">上季度</button>
+                    </div>
+                </div>
+
+                <!-- Charts Area -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200/50 min-h-[380px]">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-1">销售拜访量 TOP 5</h2>
+                        <p class="text-xs text-slate-400 mb-3">按总拜访次数排名</p>
+                        <div id="visitVolumeTop5Chart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200/50 min-h-[380px]">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-1">新增客户数 TOP 5</h2>
+                        <p class="text-xs text-slate-400 mb-3">按新增客户数量排名</p>
+                        <div id="newCustomersTop5Chart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200/50 min-h-[380px]">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-1">拜访方式分布</h2>
+                        <p class="text-xs text-slate-400 mb-3">各项拜访方式占比</p>
+                        <div id="visitMethodChart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-lg border border-gray-200/50 min-h-[380px]">
+                        <h2 class="text-lg font-semibold text-slate-700 mb-1">客户类别拜访分布</h2>
+                        <p class="text-xs text-slate-400 mb-3">不同类别客户的拜访构成 (从高到低)</p>
+                        <div id="customerCategoryVisitChart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Empty State Example (hidden by default) -->
+                <div id="emptyState" class="hidden text-center py-12 mt-6">
+                    <i class="ti ti-database-off text-6xl text-slate-400 mb-4"></i>
+                    <h3 class="text-xl font-medium text-slate-600 mb-2">暂无数据</h3>
+                    <p class="text-slate-500">当前筛选条件下没有可展示的数据，请尝试调整时间范围。</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+    
+<script>
+    // Sidebar and User Dropdown Logic (Same as previous)
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggleDesktop = document.getElementById('sidebarToggleDesktop');
+    const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
+    const sidebarToggleFooter = document.getElementById('sidebarToggleFooter');
+    const sidebarToggleFooterIcon = document.getElementById('sidebarToggleFooterIcon');
+    const sidebarNavTexts = document.querySelectorAll('.sidebar-nav-text');
+
+    function toggleSidebar() {
+        sidebar.classList.toggle('w-64');
+        sidebar.classList.toggle('w-20');
+        sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-left');
+        sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-right');
+        sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-left');
+        sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-right');
+        const footerText = sidebarToggleFooter.querySelector('span');
+        if (sidebar.classList.contains('w-20')) {
+            footerText.classList.add('hidden');
+            sidebarNavTexts.forEach(text => text.classList.add('hidden'));
+        } else {
+            footerText.classList.remove('hidden');
+            sidebarNavTexts.forEach(text => text.classList.remove('hidden'));
+        }
+        window.dispatchEvent(new Event('resize'));
+    }
+    if (sidebarToggleDesktop) sidebarToggleDesktop.addEventListener('click', toggleSidebar);
+    if (sidebarToggleFooter) sidebarToggleFooter.addEventListener('click', toggleSidebar);
+    if (sidebarToggleMobile) {
+        sidebarToggleMobile.addEventListener('click', () => {
+            sidebar.classList.remove('hidden');
+            sidebar.classList.toggle('-translate-x-full');
+            sidebar.classList.toggle('translate-x-0');
+        });
+    }
+    function toggleSubmenu(menuId) {
+        const menu = document.getElementById(menuId);
+        const icon = document.getElementById(menuId + 'Icon');
+        menu.classList.toggle('hidden');
+        icon.classList.toggle('ti-chevron-down');
+        icon.classList.toggle('ti-chevron-up');
+    }
+    function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        const icon = document.getElementById('userDropdownIcon');
+        dropdown.classList.toggle('hidden');
+        icon.classList.toggle('ti-chevron-down');
+        icon.classList.toggle('ti-chevron-up');
+    }
+    window.addEventListener('click', function(e) {
+        const userDropdownButton = document.querySelector('#userDropdown').previousElementSibling;
+        if (!userDropdownButton.contains(e.target) && !document.getElementById('userDropdown').contains(e.target)) {
+            document.getElementById('userDropdown').classList.add('hidden');
+            document.getElementById('userDropdownIcon').classList.remove('ti-chevron-up');
+            document.getElementById('userDropdownIcon').classList.add('ti-chevron-down');
+        }
+    });
+    document.getElementById('dataUpdateTime').textContent = `2025-06-08 09:00:00`;
+
+    // Chart Colors
+    const chartColors = {
+        blue: '#3b82f6', sky: '#0ea5e9', teal: '#14b8a6', green: '#22c55e',
+        indigo: '#6366f1', purple: '#8b5cf6', amber: '#f59e0b', gray: '#6b7280',
+        textDark: '#1f2937', textLight: '#ffffff'
+    };
+
+    // Mock Data
+    const salesPeople = ['王芳', '李明', '刘强东', '赵敏', '陈浩南', '周芷若', '张三丰', '欧阳锋', '黄蓉', '段誉'];
+    
+    function generateRandomSalesData(count = 10) {
+        let data = [];
+        const selectedSalesPeople = [...salesPeople].sort(() => 0.5 - Math.random()).slice(0, count);
+        for (let i = 0; i < selectedSalesPeople.length; i++) {
+            data.push({
+                name: selectedSalesPeople[i],
+                totalVisits: Math.floor(Math.random() * 50) + 10,
+                newCustomers: Math.floor(Math.random() * 8) + 1,
+                field: Math.floor(Math.random() * 20),
+                phone: Math.floor(Math.random() * 20),
+                wechat: Math.floor(Math.random() * 20)
+            });
+        }
+        data.forEach(d => {
+            const sumMethods = d.field + d.phone + d.wechat;
+            if (sumMethods > d.totalVisits) d.totalVisits = sumMethods;
+            else {
+                let diff = d.totalVisits - sumMethods;
+                d.field += Math.floor(diff/3);
+                d.phone += Math.floor(diff/3);
+                d.wechat += diff - 2*Math.floor(diff/3);
+            }
+        });
+        return data;
+    }
+
+    const mockDataStore = {
+        lastWeek: {
+            sales: generateRandomSalesData(10),
+            visitMethods: [
+                { value: Math.floor(Math.random()*50)+100, name: '实地拜访' },
+                { value: Math.floor(Math.random()*50)+80, name: '电话拜访' },
+                { value: Math.floor(Math.random()*50)+60, name: '微信拜访' }
+            ],
+            customerCategories: {
+                names: ['企业客户', '集成商', '政府机构'],
+                field: [Math.floor(Math.random()*50)+80, Math.floor(Math.random()*20)+10, Math.floor(Math.random()*10)+5],
+                phone: [Math.floor(Math.random()*40)+50, Math.floor(Math.random()*20)+20, Math.floor(Math.random()*10)+10],
+                wechat: [Math.floor(Math.random()*30)+40, Math.floor(Math.random()*20)+15, Math.floor(Math.random()*10)+5]
+            }
+        },
+        lastMonth: {
+            sales: generateRandomSalesData(10),
+            visitMethods: [
+                { value: Math.floor(Math.random()*200)+400, name: '实地拜访' },
+                { value: Math.floor(Math.random()*200)+350, name: '电话拜访' },
+                { value: Math.floor(Math.random()*200)+250, name: '微信拜访' }
+            ],
+            customerCategories: {
+                names: ['企业客户', '集成商', '政府机构'],
+                field: [Math.floor(Math.random()*200)+300, Math.floor(Math.random()*80)+50, Math.floor(Math.random()*40)+20],
+                phone: [Math.floor(Math.random()*150)+200, Math.floor(Math.random()*80)+80, Math.floor(Math.random()*40)+40],
+                wechat: [Math.floor(Math.random()*100)+150, Math.floor(Math.random()*80)+60, Math.floor(Math.random()*40)+20]
+            }
+        },
+        lastQuarter: {
+            sales: generateRandomSalesData(10),
+            visitMethods: [
+                { value: Math.floor(Math.random()*500)+1000, name: '实地拜访' },
+                { value: Math.floor(Math.random()*500)+900, name: '电话拜访' },
+                { value: Math.floor(Math.random()*500)+700, name: '微信拜访' }
+            ],
+            customerCategories: {
+                names: ['企业客户', '集成商', '政府机构'],
+                field: [Math.floor(Math.random()*500)+800, Math.floor(Math.random()*200)+150, Math.floor(Math.random()*100)+50],
+                phone: [Math.floor(Math.random()*400)+600, Math.floor(Math.random()*200)+200, Math.floor(Math.random()*100)+100],
+                wechat: [Math.floor(Math.random()*300)+400, Math.floor(Math.random()*200)+150, Math.floor(Math.random()*100)+50]
+            }
+        }
+    };
+
+    let currentPeriod = 'lastWeek';
+
+    let visitVolumeTop5Chart, newCustomersTop5Chart, visitMethodChart, customerCategoryVisitChart;
+
+    function initCharts() {
+        visitVolumeTop5Chart = echarts.init(document.getElementById('visitVolumeTop5Chart'));
+        newCustomersTop5Chart = echarts.init(document.getElementById('newCustomersTop5Chart'));
+        visitMethodChart = echarts.init(document.getElementById('visitMethodChart'));
+        customerCategoryVisitChart = echarts.init(document.getElementById('customerCategoryVisitChart'));
+        updateAllCharts();
+    }
+
+    function updateAllCharts() {
+        const data = mockDataStore[currentPeriod];
+        if (!data) {
+            document.getElementById('emptyState').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('emptyState').classList.add('hidden');
+
+        // 1. Visit Volume TOP 5 Chart (No changes)
+        const topSalesByVisits = [...data.sales].sort((a, b) => b.totalVisits - a.totalVisits).slice(0, 5).reverse();
+        visitVolumeTop5Chart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '10%', bottom: '3%', top: '5%', containLabel: true },
+            xAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#e5e7eb' } }, axisLabel: { color: chartColors.gray } },
+            yAxis: { type: 'category', data: topSalesByVisits.map(s => s.name), axisLabel: { color: chartColors.gray, interval: 0 }, axisTick: { alignWithLabel: true } },
+            series: [{
+                name: '总拜访量', type: 'bar', data: topSalesByVisits.map(s => s.totalVisits),
+                itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{offset: 0, color: chartColors.sky}, {offset: 1, color: chartColors.blue}]), borderRadius: [0, 5, 5, 0]},
+                barWidth: '40%', label: { show: true, position: 'right', color: chartColors.gray, fontWeight: '500' }
+            }]
+        }, true); // Add 'true' for notMerge to ensure options are fully replaced
+
+        // 2. New Customers TOP 5 Chart (No changes)
+        const topSalesByNewCustomers = [...data.sales].sort((a, b) => b.newCustomers - a.newCustomers).slice(0, 5).reverse();
+        newCustomersTop5Chart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '10%', bottom: '3%', top: '5%', containLabel: true },
+            xAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#e5e7eb' } }, axisLabel: { color: chartColors.gray } },
+            yAxis: { type: 'category', data: topSalesByNewCustomers.map(s => s.name), axisLabel: { color: chartColors.gray, interval: 0 }, axisTick: { alignWithLabel: true } },
+            series: [{
+                name: '新增客户数', type: 'bar', data: topSalesByNewCustomers.map(s => s.newCustomers),
+                itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{offset: 0, color: chartColors.teal}, {offset: 1, color: chartColors.green}]), borderRadius: [0, 5, 5, 0]},
+                barWidth: '40%', label: { show: true, position: 'right', color: chartColors.gray, fontWeight: '500' }
+            }]
+        }, true);
+
+        // 3. Visit Method Chart (Pie) - MODIFIED
+        visitMethodChart.setOption({
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: { orient: 'horizontal', bottom: '0', textStyle: { color: chartColors.gray }, itemGap: 10 },
+            series: [{
+                name: '拜访方式', type: 'pie', radius: ['40%', '65%'], avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+                label: {
+                    show: true,
+                    formatter: '{b}\n{d}%', // Show name and percentage
+                    fontSize: 10,
+                    color: chartColors.textDark, // Dark text for better readability on light slices
+                    lineHeight: 14,
+                    position: 'outside' // Position labels outside
+                },
+                labelLine: {
+                    show: true,
+                    length: 8,
+                    length2: 5,
+                    smooth: true
+                },
+                emphasis: { 
+                    label: { 
+                        show: true, 
+                        fontSize: '12', 
+                        fontWeight: 'bold',
+                        formatter: '{b}\n{c}次 ({d}%)' // More detail on hover
+                    } 
+                },
+                data: data.visitMethods.map((item, index) => ({
+                    ...item, 
+                    itemStyle: { color: [chartColors.blue, chartColors.sky, chartColors.teal][index % 3] }
+                }))
+            }]
+        }, true);
+
+        // 4. Customer Category Visit Chart (Stacked Bar) - MODIFIED
+        const categoryData = data.customerCategories.names.map((name, index) => ({
+            name: name,
+            field: data.customerCategories.field[index],
+            phone: data.customerCategories.phone[index],
+            wechat: data.customerCategories.wechat[index],
+            total: data.customerCategories.field[index] + data.customerCategories.phone[index] + data.customerCategories.wechat[index]
+        }));
+        categoryData.sort((a, b) => b.total - a.total); // Sort by total visits, descending
+
+        customerCategoryVisitChart.setOption({
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { data: ['实地拜访', '电话拜访', '微信拜访'], bottom: 0, textStyle: { color: chartColors.gray }, itemGap: 10 },
+            grid: { left: '3%', right: '4%', bottom: '12%', top:'8%', containLabel: true },
+            xAxis: { type: 'value', splitLine: { lineStyle: { type: 'dashed', color: '#e5e7eb' } }, axisLabel: { color: chartColors.gray } },
+            yAxis: { 
+                type: 'category', 
+                data: categoryData.map(cat => cat.name), // Use sorted names
+                axisLabel: { color: chartColors.gray, interval: 0 } 
+            },
+            series: [
+                { name: '实地拜访', type: 'bar', stack: '总量', barWidth: '50%', itemStyle: { color: chartColors.blue, borderRadius: [0,3,3,0]}, data: categoryData.map(cat => cat.field) },
+                { name: '电话拜访', type: 'bar', stack: '总量', itemStyle: { color: chartColors.sky, borderRadius: [0,3,3,0] }, data: categoryData.map(cat => cat.phone) },
+                { name: '微信拜访', type: 'bar', stack: '总量', itemStyle: { color: chartColors.teal, borderRadius: [0,3,3,0] }, data: categoryData.map(cat => cat.wechat) }
+            ]
+        }, true);
+    }
+
+    // Tab Click Handler
+    const timeTabs = document.querySelectorAll('.time-tab');
+    timeTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            currentPeriod = this.dataset.range;
+            timeTabs.forEach(t => {
+                t.classList.remove('custom-tab-active');
+                t.classList.add('custom-tab-inactive');
+            });
+            this.classList.add('custom-tab-active');
+            this.classList.remove('custom-tab-inactive');
+            updateAllCharts();
+        });
+    });
+
+    window.addEventListener('resize', function () {
+        if(visitVolumeTop5Chart) visitVolumeTop5Chart.resize();
+        if(newCustomersTop5Chart) newCustomersTop5Chart.resize();
+        if(visitMethodChart) visitMethodChart.resize();
+        if(customerCategoryVisitChart) customerCategoryVisitChart.resize();
+    });
+    
+    document.addEventListener('DOMContentLoaded', initCharts);
+    
+    if (window.innerWidth < 768) {
+        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.add('hidden'); 
+        if(sidebar.classList.contains('w-20')){
+            sidebarNavTexts.forEach(text => text.classList.add('hidden'));
+        }
+    }
+</script>
+
+</body>
 </html>
