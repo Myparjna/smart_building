@@ -25,35 +25,27 @@
         }
         /* Main Page Time Period Tabs */
         .main-period-tab-group button {
-            padding: 6px 16px; /* Adjusted padding */
-            margin-right: -1px; /* For continuous border look */
+            padding: 6px 16px;
+            margin-right: -1px; 
             border: 1px solid #dcdfe6;
-            background-color: #f4f4f5; color: #606266; /* Element UI default tab colors */
+            background-color: #f4f4f5; color: #606266;
             cursor: pointer; font-size: 14px; transition: all 0.2s;
         }
         .main-period-tab-group button:first-child { border-radius: 4px 0 0 4px;}
         .main-period-tab-group button:last-child { border-radius: 0 4px 4px 0; margin-right: 0;}
 
         .main-period-tab-group button.active {
-            background-color: #1890FF; /* Element UI Blue */
+            background-color: #1890FF; 
             color: white;
             border-color: #1890FF;
-            z-index: 1; /* Ensure active tab border overlaps */
+            z-index: 1; 
         }
         .main-period-tab-group button:not(.active):hover {
             color: #1890FF;
-            border-color: #c6e2ff; /* Lighter blue for hover border */
-            /* background-color: #ecf5ff; Slightly lighter blue background on hover */
+            border-color: #c6e2ff; 
         }
-
 
         .sidebar { transition: width 0.3s ease-in-out; }
-        .subtle-gradient-border { position: relative; }
-        .subtle-gradient-border::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: linear-gradient(to right, #4f46e5, #3b82f6, #22d3ee);
-            border-top-left-radius: 12px; border-top-right-radius: 12px;
-        }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
@@ -75,19 +67,14 @@
         .modal-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #9ca3af; }
         .modal-close-btn:hover { color: #1f2937; }
         
-        /* Modal Tabs (Element UI-like) */
         .modal-tab-group button {
             padding: 8px 16px; margin-right: 4px; border: 1px solid #dcdfe6;
             border-bottom: none; background-color: #f4f4f5; color: #909399;
             border-radius: 4px 4px 0 0; cursor: pointer; font-size: 14px; transition: all 0.2s;
         }
-        .modal-tab-group button.active {
-            background-color: #1890FF; /* Element UI Blue */
-            color: white; border-color: #1890FF;
-        }
+        .modal-tab-group button.active { background-color: #1890FF; color: white; border-color: #1890FF; }
         .modal-tab-group button:not(.active):hover { color: #1890FF; border-color: #c6e2ff; background-color: #ecf5ff;}
 
-        /* Modal Table (Element UI-like) */
         .modal-table { width: 100%; border-collapse: collapse; font-size: 14px; }
         .modal-table th, .modal-table td { border: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; }
         .modal-table th { background-color: #f8fafd; color: #606266; font-weight: 500; }
@@ -96,8 +83,6 @@
         .modal-table .remarks-cell { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .modal-table .content-cell { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-
-        /* Modal Pagination (Element UI-like) */
         .modal-pagination { margin-top: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
         .modal-pagination button, .modal-pagination span {
             padding: 6px 12px; border: 1px solid #dcdfe6; background-color: #fff;
@@ -202,12 +187,12 @@
         </div>
         
         <!-- Main content area -->
-        <main class="flex-1 p-6 overflow-y-auto">
-            <div class="content-card p-6 subtle-gradient-border min-h-[calc(100vh-180px)]">
+        <main class="flex-1 p-4 overflow-y-auto"> <!-- Reduced padding -->
+            <div class="content-card p-4 min-h-[calc(100vh-144px)]"> <!-- Reduced padding, removed subtle-gradient-border, adjusted min-height -->
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6">
                     <div>
                         <h1 class="text-2xl font-semibold text-slate-800 harmony-sans">客户拜访统计看板</h1>
-                        <p class="text-sm text-slate-500 mt-1">当前数据更新至：<span id="dataUpdateTime">2025-06-08 09:00:00</span></p>
+                        <p class="text-sm text-slate-500 mt-1">当前统计周期为：<span id="currentPeriodDisplay"></span></p>
                     </div>
                     <!-- Time Range Tabs -->
                     <div id="timeRangeTabs" class="main-period-tab-group flex mt-4 sm:mt-0">
@@ -250,7 +235,7 @@
     <div id="visitDetailsModal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="text-lg font-semibold text-slate-800">拜访明细 - <span id="modalSalespersonName"></span></h3>
+                <h3 id="modalVisitDetailsTitle" class="text-lg font-semibold text-slate-800">拜访明细</h3>
                 <button class="modal-close-btn" onclick="closeVisitDetailsModal()"><i class="ti ti-x"></i></button>
             </div>
             <div class="modal-body">
@@ -289,62 +274,71 @@
     
 <script>
     // Sidebar and User Dropdown Logic
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggleDesktop = document.getElementById('sidebarToggleDesktop');
-    const sidebarToggleMobile = document.getElementById('sidebarToggleMobile');
-    const sidebarToggleFooter = document.getElementById('sidebarToggleFooter');
-    const sidebarToggleFooterIcon = document.getElementById('sidebarToggleFooterIcon');
-    const sidebarNavTexts = document.querySelectorAll('.sidebar-nav-text');
-
-    function toggleSidebar() {
-        sidebar.classList.toggle('w-64'); sidebar.classList.toggle('w-20');
-        sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-left'); sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-right');
-        sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-left'); sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-right');
-        const footerText = sidebarToggleFooter.querySelector('span');
-        if (sidebar.classList.contains('w-20')) { footerText.classList.add('hidden'); sidebarNavTexts.forEach(text => text.classList.add('hidden')); } 
-        else { footerText.classList.remove('hidden'); sidebarNavTexts.forEach(text => text.classList.remove('hidden')); }
-        window.dispatchEvent(new Event('resize'));
-    }
-    if (sidebarToggleDesktop) sidebarToggleDesktop.addEventListener('click', toggleSidebar);
-    if (sidebarToggleFooter) sidebarToggleFooter.addEventListener('click', toggleSidebar);
-    if (sidebarToggleMobile) { sidebarToggleMobile.addEventListener('click', () => { sidebar.classList.remove('hidden'); sidebar.classList.toggle('-translate-x-full'); sidebar.classList.toggle('translate-x-0'); }); }
+    const sidebar = document.getElementById('sidebar'); const sidebarToggleDesktop = document.getElementById('sidebarToggleDesktop'); const sidebarToggleMobile = document.getElementById('sidebarToggleMobile'); const sidebarToggleFooter = document.getElementById('sidebarToggleFooter'); const sidebarToggleFooterIcon = document.getElementById('sidebarToggleFooterIcon'); const sidebarNavTexts = document.querySelectorAll('.sidebar-nav-text');
+    function toggleSidebar() { sidebar.classList.toggle('w-64'); sidebar.classList.toggle('w-20'); sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-left'); sidebarToggleDesktop.querySelector('i').classList.toggle('ti-chevrons-right'); sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-left'); sidebarToggleFooterIcon.classList.toggle('ti-arrow-bar-to-right'); const footerText = sidebarToggleFooter.querySelector('span'); if (sidebar.classList.contains('w-20')) { footerText.classList.add('hidden'); sidebarNavTexts.forEach(text => text.classList.add('hidden')); } else { footerText.classList.remove('hidden'); sidebarNavTexts.forEach(text => text.classList.remove('hidden')); } window.dispatchEvent(new Event('resize')); }
+    if (sidebarToggleDesktop) sidebarToggleDesktop.addEventListener('click', toggleSidebar); if (sidebarToggleFooter) sidebarToggleFooter.addEventListener('click', toggleSidebar); if (sidebarToggleMobile) { sidebarToggleMobile.addEventListener('click', () => { sidebar.classList.remove('hidden'); sidebar.classList.toggle('-translate-x-full'); sidebar.classList.toggle('translate-x-0'); }); }
     function toggleSubmenu(menuId) { const menu = document.getElementById(menuId); const icon = document.getElementById(menuId + 'Icon'); menu.classList.toggle('hidden'); icon.classList.toggle('ti-chevron-down'); icon.classList.toggle('ti-chevron-up'); }
     function toggleUserDropdown() { const dropdown = document.getElementById('userDropdown'); const icon = document.getElementById('userDropdownIcon'); dropdown.classList.toggle('hidden'); icon.classList.toggle('ti-chevron-down'); icon.classList.toggle('ti-chevron-up'); }
     window.addEventListener('click', function(e) { const userDropdownButton = document.querySelector('#userDropdown').previousElementSibling; if (userDropdownButton && !userDropdownButton.contains(e.target) && !document.getElementById('userDropdown').contains(e.target)) { document.getElementById('userDropdown').classList.add('hidden'); document.getElementById('userDropdownIcon').classList.remove('ti-chevron-up'); document.getElementById('userDropdownIcon').classList.add('ti-chevron-down'); } });
-    document.getElementById('dataUpdateTime').textContent = `2025-06-08 09:00:00`;
-
+    
     // Chart Colors
     const chartColors = { blue: '#3b82f6', sky: '#0ea5e9', teal: '#14b8a6', green: '#22c55e', red: '#ef4444', indigo: '#6366f1', purple: '#8b5cf6', amber: '#f59e0b', gray: '#6b7280', textDark: '#1f2937', textLight: '#ffffff' };
 
+    // --- Date Range Logic ---
+    const todayForDateCalc = new Date('2025-06-08T09:00:00'); // Fixed "today" for consistent date calculations
+    function getFormattedDate(date) { const y = date.getFullYear(); const m = (date.getMonth() + 1).toString().padStart(2, '0'); const d = date.getDate().toString().padStart(2, '0'); return `${y}-${m}-${d}`; }
+    function getDateRanges() {
+        const ranges = {};
+        let lwStart = new Date(todayForDateCalc); lwStart.setDate(todayForDateCalc.getDate() - todayForDateCalc.getDay() - 6); // Corrected: Last week Monday
+        let lwEnd = new Date(lwStart); lwEnd.setDate(lwStart.getDate() + 6); // Last week Sunday
+        if (todayForDateCalc.getDay() === 0) { // If today is Sunday, last week is 7 days prior
+             lwStart.setDate(todayForDateCalc.getDate() - 13);
+             lwEnd.setDate(todayForDateCalc.getDate() - 7);
+        } else { // if today is Mon-Sat, last week starts from previous Monday
+            lwStart.setDate(todayForDateCalc.getDate() - todayForDateCalc.getDay() - 6);
+            lwEnd.setDate(lwStart.getDate() + 6);
+        }
+
+
+        ranges.lastWeek = { start: getFormattedDate(lwStart), end: getFormattedDate(lwEnd), display: `${getFormattedDate(lwStart)} ~ ${getFormattedDate(lwEnd)}` };
+        
+        let lmStart = new Date(todayForDateCalc.getFullYear(), todayForDateCalc.getMonth() - 1, 1);
+        let lmEnd = new Date(todayForDateCalc.getFullYear(), todayForDateCalc.getMonth(), 0);
+        ranges.lastMonth = { start: getFormattedDate(lmStart), end: getFormattedDate(lmEnd), display: `${getFormattedDate(lmStart)} ~ ${getFormattedDate(lmEnd)}` };
+        
+        const currentMonth = todayForDateCalc.getMonth(); const currentYear = todayForDateCalc.getFullYear();
+        let lqStartMonth, lqEndMonth, lqYear = currentYear;
+        if (currentMonth < 3) { lqStartMonth = 9; lqEndMonth = 11; lqYear = currentYear - 1; } 
+        else if (currentMonth < 6) { lqStartMonth = 0; lqEndMonth = 2; } 
+        else if (currentMonth < 9) { lqStartMonth = 3; lqEndMonth = 5; } 
+        else { lqStartMonth = 6; lqEndMonth = 8; }
+        let lqStart = new Date(lqYear, lqStartMonth, 1); let lqEnd = new Date(lqYear, lqEndMonth + 1, 0);
+        ranges.lastQuarter = { start: getFormattedDate(lqStart), end: getFormattedDate(lqEnd), display: `${getFormattedDate(lqStart)} ~ ${getFormattedDate(lqEnd)}` };
+        return ranges;
+    }
+    const periodDateRanges = getDateRanges();
+    document.getElementById('currentPeriodDisplay').textContent = periodDateRanges.lastWeek.display; // Default display
+
+
     // --- Mock Data Generation ---
     const salesPeopleNames = ['王芳', '李明', '刘强东', '赵敏', '陈浩南', '周芷若', '张三丰', '欧阳锋', '黄蓉', '段誉'];
-    const customerNamePool = [ // Updated realistic names
-        '巴斯夫化工', '科思创聚合物', '万华化学集团', '恒力石化', '荣盛石化',
-        '迈瑞医疗器械', '联影医疗科技', '药明康德新药', '复星医药集团', '恒瑞医药',
-        '中国移动通信', '中国电信集团', '中国联通网络', '华为技术', '中兴通讯',
-        '国家能源投资', '中国石油化工', '中国海洋石油', '华能国际电力', '大唐发电股份'
-    ];
+    const customerNamePool = [ '巴斯夫（中国）有限公司', '科思创聚合物（上海）', '万华化学集团股份有限公司', '恒力石化（大连）有限公司', '浙江荣盛石化股份有限公司', '深圳迈瑞生物医疗电子', '上海联影医疗科技有限公司', '药明康德新药开发有限公司', '上海复星医药（集团）', '江苏恒瑞医药股份有限公司', '中国移动通信集团公司', '中国电信集团有限公司', '中国联合网络通信集团', '华为投资控股有限公司', '中兴通讯股份有限公司', '国家能源投资集团有限责任公司', '中国石油化工集团公司', '中国海洋石油集团有限公司', '华能国际电力开发公司', '大唐国际发电股份有限公司' ];
     const contactNamePool = ['张经理', '李总监', '王主任', '赵工', '孙主管', '周采购', '吴助理', '郑科长', '冯顾问', '陈博士'];
     const visitContentPool = [ '介绍公司最新催化剂产品线', '讨论定制化医疗影像解决方案', '洽谈5G基站设备采购意向', '探讨新能源项目合作可能性', '跟进聚氨酯原料订单', '演示新型体外诊断试剂', '沟通企业云通信服务套餐', '了解煤炭清洁利用技术需求', '确认新药临床试验进度', '商议光伏电站运维合同' ];
     const remarksPool = ['客户对XX产品表示浓厚兴趣', '技术参数需进一步确认', '报价已发送，等待反馈', '项目预算审批中', '已约定下周进行技术交流', '客户关系良好，持续跟进', '有明确采购计划', '对比多家供应商', '索要了详细资料', '高层决策，周期较长'];
     const visitMethods = ['实地拜访', '电话拜访', '微信拜访'];
-
-    function generateRandomSalesPerformanceData(numSales = 10) {
-        let data = [];
-        for (let i = 0; i < numSales; i++) {
-            let totalVisits = Math.floor(Math.random() * 60) + 15; let newCustomers = Math.floor(Math.random() * (Math.min(totalVisits, 10)));
-            if (newCustomers < 0) newCustomers = 0; if (newCustomers > totalVisits && totalVisits > 0) newCustomers = totalVisits; else if (totalVisits === 0) newCustomers = 0;
-            data.push({ name: salesPeopleNames[i % salesPeopleNames.length], totalVisits: totalVisits, newCustomers: newCustomers });
-        }
-        return data;
-    }
-    function generateRandomVisitDetails(salespersonName, period) {
+    function generateRandomSalesPerformanceData(numSales = 10) { let data = []; for (let i = 0; i < numSales; i++) { let totalVisits = Math.floor(Math.random() * 60) + 15; let newCustomers = Math.floor(Math.random() * (Math.min(totalVisits, 10))); if (newCustomers < 0) newCustomers = 0; if (newCustomers > totalVisits && totalVisits > 0) newCustomers = totalVisits; else if (totalVisits === 0) newCustomers = 0; data.push({ name: salesPeopleNames[i % salesPeopleNames.length], totalVisits: totalVisits, newCustomers: newCustomers }); } return data; }
+    function generateRandomVisitDetails(salespersonName, periodKey) {
         const numVisits = Math.floor(Math.random() * 25) + 5; const details = [];
-        const baseDate = period === 'lastWeek' ? new Date('2025-06-01') : period === 'lastMonth' ? new Date('2025-05-01') : new Date('2025-04-01');
-        const dateRange = period === 'lastWeek' ? 7 : period === 'lastMonth' ? 30 : 90;
+        const periodRange = periodDateRanges[periodKey];
+        const startDate = new Date(periodRange.start + 'T00:00:00');
+        const endDate = new Date(periodRange.end + 'T23:59:59');
+        const diffTime = Math.abs(endDate - startDate);
+
         for (let i = 0; i < numVisits; i++) {
-            const visitDate = new Date(baseDate.getTime() + Math.random() * dateRange * 24 * 60 * 60 * 1000);
-            if (visitDate.getDay() === 0 || visitDate.getDay() === 6) { visitDate.setDate(visitDate.getDate() + (visitDate.getDay() === 0 ? 1 : 2)); }
+            const randomTime = Math.random() * diffTime;
+            const visitDate = new Date(startDate.getTime() + randomTime);
+            if (visitDate.getDay() === 0 || visitDate.getDay() === 6) { visitDate.setDate(visitDate.getDate() + (visitDate.getDay() === 0 ? 1 : 2)); if(visitDate > endDate) visitDate.setDate(visitDate.getDate() - 3); } // Adjust if pushed out of range
             visitDate.setHours(Math.floor(Math.random() * 9) + 9); visitDate.setMinutes(Math.floor(Math.random()*60));
             details.push({ id: i + 1, customerAbbr: customerNamePool[Math.floor(Math.random() * customerNamePool.length)], visitedPerson: contactNamePool[Math.floor(Math.random() * contactNamePool.length)], visitMethod: visitMethods[Math.floor(Math.random() * visitMethods.length)], visitContent: visitContentPool[Math.floor(Math.random() * visitContentPool.length)], remarks: remarksPool[Math.floor(Math.random() * remarksPool.length)], visitDate: visitDate.toISOString().slice(0, 19).replace('T', ' ') });
         }
@@ -367,6 +361,7 @@
 
     function updateAllMainCharts() {
         const data = mockDataStore[currentMainPeriod];
+        document.getElementById('currentPeriodDisplay').textContent = periodDateRanges[currentMainPeriod].display;
          if (!data || !data.sales || data.sales.length === 0) { document.getElementById('emptyState').classList.remove('hidden'); document.getElementById('salesPerformanceChart').parentElement.style.display = 'none'; document.getElementById('visitMethodChart').parentElement.style.display = 'none'; document.getElementById('customerCategoryVisitChart').parentElement.style.display = 'none'; return; }
         document.getElementById('emptyState').classList.add('hidden'); document.getElementById('salesPerformanceChart').parentElement.style.display = 'block'; document.getElementById('visitMethodChart').parentElement.style.display = 'block'; document.getElementById('customerCategoryVisitChart').parentElement.style.display = 'block';
         const salesData = [...data.sales].sort((a, b) => b.totalVisits - a.totalVisits);
@@ -385,18 +380,13 @@
     }
 
     const mainTimeTabs = document.querySelectorAll('.main-period-tab');
-    mainTimeTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            currentMainPeriod = this.dataset.range;
-            mainTimeTabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            updateAllMainCharts();
-        });
-    });
+    mainTimeTabs.forEach(tab => { tab.addEventListener('click', function() { currentMainPeriod = this.dataset.range; mainTimeTabs.forEach(t => t.classList.remove('active')); this.classList.add('active'); updateAllMainCharts(); }); });
     
     function openVisitDetailsModal(salespersonName) {
         modalCurrentSalesperson = salespersonName; modalCurrentVisitFilter = 'all'; modalCurrentPage = 1;
-        document.getElementById('modalSalespersonName').textContent = salespersonName;
+        const modalTitleEl = document.getElementById('modalVisitDetailsTitle');
+        const currentRangeDisplay = periodDateRanges[currentMainPeriod].display;
+        modalTitleEl.textContent = `${currentRangeDisplay} 日拜访明细 - ${salespersonName}`;
         document.getElementById('visitDetailsModal').classList.remove('hidden');
         document.querySelectorAll('.modal-visit-filter-tab').forEach(tab => { tab.classList.remove('active'); if (tab.dataset.filter === 'all') tab.classList.add('active'); });
         renderModalTable();
